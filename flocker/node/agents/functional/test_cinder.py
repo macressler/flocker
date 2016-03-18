@@ -30,11 +30,13 @@ from flocker.ca import (
 )
 
 from ..testtools import (
-    make_iblockdeviceapi_tests, make_icloudapi_tests,
+    dataset_agent_api_for_test,
+    make_iblockdeviceapi_tests,
+    make_icloudapi_tests,
 )
 from ..test.blockdevicefactory import (
     InvalidConfig, ProviderType, get_blockdevice_config,
-    get_blockdeviceapi_with_cleanup, get_device_allocation_unit,
+    get_device_allocation_unit,
     get_minimum_allocatable_size, get_openstack_region_for_test,
 )
 from ....testtools import TestCase, flaky, run_process
@@ -89,7 +91,12 @@ def cinderblockdeviceapi_for_test(test_case):
         be cleaned up at the end of the test (using ``test_case``\ 's cleanup
         features).
     """
-    return get_blockdeviceapi_with_cleanup(test_case, ProviderType.openstack)
+    return dataset_agent_api_for_test(
+        test_case=test_case,
+        dataset_configuration={
+            u"dataset": get_blockdevice_config(ProviderType.openstack)
+        }
+    )
 
 
 class CinderBlockDeviceAPIInterfaceTests(
