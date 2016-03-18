@@ -440,14 +440,15 @@ class AgentService(PClass):
     api_args = field(type=PMap, factory=pmap, mandatory=True)
 
     @classmethod
-    def from_configuration(cls, configuration):
+    def from_configuration(cls, configuration, reactor=None):
         """
         Load configuration from a data structure loaded from the configuration
         file and only minimally processed.
 
         :param dict configuration: Agent configuration as returned by
             ``get_configuration``.
-
+        :param IReactorCore reactor: A provider of IReactorCore and
+            IReactorTime or None to use the global reactor.
         :return: A new instance of ``cls`` with values loaded from the
             configuration.
         """
@@ -463,8 +464,7 @@ class AgentService(PClass):
 
         api_args = configuration['dataset']
         backend_name = api_args.pop('backend')
-
-        return cls(
+        kwargs = dict(
             control_service_host=host,
             control_service_port=port,
 
@@ -474,6 +474,9 @@ class AgentService(PClass):
             backend_name=backend_name.decode("ascii"),
             api_args=api_args,
         )
+        if reactor is not None:
+            kwargs['reactor'] = reactor
+        return cls(**kwargs)
 
     def get_backend(self):
         """

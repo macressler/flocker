@@ -27,6 +27,11 @@ from zope.interface.verify import verifyObject
 
 from ....testtools import TestCase, AsyncTestCase
 
+
+from ....ca.testtools import get_credential_sets
+from ....testtools import MemoryCoreReactor
+from ...script import AgentService
+
 from ..blockdevice import (
     AlreadyAttachedVolume,
     BlockDeviceVolume,
@@ -869,3 +874,23 @@ def make_iprofiledblockdeviceapi_tests(profiled_blockdevice_api_factory,
             self.dataset_size = dataset_size
 
     return Tests
+
+
+def dataset_agent_api_for_test(test_case, dataset_configuration):
+    ca_set = get_credential_sets()[0]
+    configuration = {
+        u"control-service": {
+            u"hostname": b"192.0.2.5",
+            u"port": 54123
+        },
+        u"node-credential": ca_set.node,
+        u"ca-certificate": ca_set.root.credential.certificate,
+    }
+    configuration.update(dataset_configuration)
+    agent_service = AgentService.from_configuration(
+        configuration=configuration,
+        reactor=MemoryCoreReactor(),
+    )
+    api = agent_service.get_api()
+    test_case.addCleanup(detach_destroy_volumes, api)
+    return api
